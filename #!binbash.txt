@@ -1,0 +1,54 @@
+#!/bin/bash
+
+DATE=$(date +%F)
+
+LOG="docker_install_${DATE}.log"
+
+USERID=$(id -u)
+
+VALIDATE(){
+
+if [ $1 -ne 0 ]; then
+    echo "$2 is not succesfully installed :("
+	exit 1
+else
+    echo "$2 is succesfully installed :)"
+fi
+
+}
+
+if [ $USERID -ne 0 ]; then
+    echo "you need to be a root user to execute this command"
+	exit 1
+fi
+
+apt-get update &>>$LOG
+
+VALIDATE $? "update cmd" 
+
+apt-get install apt-transport-https ca-certificates curl software-properties-common &>>$LOG
+
+VALIDATE $? "Downloading Dependencies"
+
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add - &>>$LOG
+
+VALIDATE $? "Adding Docker’s GPG Key"
+
+add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu  $(lsb_release -cs)  stable" &>>$LOG
+
+VALIDATE $? "Installing the Docker Repository"
+
+apt-get update &>>$LOG
+
+VALIDATE $? "update cmd"
+
+apt-get install docker-ce &>>$LOG
+
+VALIDATE $? "Installing latest Docker version"
+
+docker --version &>>$LOG
+VALIDATE $? "Verifying Docker Installation"
+
+systemctl start docker &>>$LOG
+
+VALIDATE $? "Enable Docker Service"
